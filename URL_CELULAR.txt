@@ -1,0 +1,17 @@
+🗼 URL PARA ACESSAR NO CELULAR
+================================
+
+IP PÚBLICO: 51.8.152.64
+PORTA: 8000
+ARQUIVO: control.html
+
+URL: http://51.8.152.64:8000/control.html
+
+Se não funcionar:
+1. Verifique se o servidor está rodando
+2. Tente com o HTTPS (pode ser necessário certificado)
+3. Verifique firewall do seu celular/router
+
+Status do Servidor:
+- Rodando em 0.0.0.0:8000
+- Servindo arquivos de /workspaces/codespaces-react/

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗼 Torre Eiffel - Controle ESP32</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #fbbf24;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .status.connected {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 2px solid #22c55e;
+        }
+
+        .status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+
+        .section {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #fbbf24;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #fbbf24;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        /* Color Section */
+        .color-box {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="color"] {
+            width: 80px;
+            height: 80px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        input[type="color"]:hover {
+            transform: scale(1.05);
+        }
+
+        .color-presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .color-btn {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            border-color: #fbbf24;
+        }
+
+        /* Sliders */
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(251, 191, 36, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fbbf24;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fbbf24;
+            border: none;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        /* Effects Grid */
+        .effects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+        }
+
+        .effect-btn {
+            padding: 12px;
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            color: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.85em;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .effect-btn:hover {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+            transform: translateY(-3px);
+        }
+
+        .effect-btn.active {
+            background: #fbbf24;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+        }
+
+        /* Off Button */
+        .btn-off {
+            width: 100%;
+            padding: 15px;
+            background: #ef4444;
+            color: #fff;
+            border: 2px solid #dc2626;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-off:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .info {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 20px;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 500px) {
+            .section {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .color-presets {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .effects {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            input[type="color"] {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗼 Torre Eiffel</h1>
+            <div class="status disconnected" id="status">Desconectado</div>
+        </div>
+
+        <!-- CORES -->
+        <div class="section">
+            <h2>🎨 Cores</h2>
+            <div class="color-box">
+                <input type="color" id="colorPicker" value="#fbbf24">
+                <span>Selecione</span>
+            </div>
+            <div class="color-presets">
+                <button class="color-btn" style="background:#fbbf24" onclick="sendColor('#fbbf24')" title="Ouro"></button>
+                <button class="color-btn" style="background:#ff0000" onclick="sendColor('#ff0000')" title="Vermelho"></button>
+                <button class="color-btn" style="background:#00ff00" onclick="sendColor('#00ff00')" title="Verde"></button>
+                <button class="color-btn" style="background:#0099ff" onclick="sendColor('#0099ff')" title="Azul"></button>
+                <button class="color-btn" style="background:#ff00ff" onclick="sendColor('#ff00ff')" title="Magenta"></button>
+                <button class="color-btn" style="background:#00ffff" onclick="sendColor('#00ffff')" title="Ciano"></button>
+                <button class="color-btn" style="background:#ffffff" onclick="sendColor('#ffffff')" title="Branco"></button>
+                <button class="color-btn" style="background:#000000;border:2px solid #444" onclick="sendColor('#000000')" title="Preto"></button>
+            </div>
+        </div>
+
+        <!-- BRILHO -->
+        <div class="section">
+            <h2>💡 Brilho</h2>
+            <div class="slider-group">
+                <input type="range" id="brightness" min="0" max="255" value="100" oninput="sendBrightness(this.value)">
+                <span class="slider-value" id="brightnessValue">100</span>
+            </div>
+        </div>
+
+        <!-- EFEITOS -->
+        <div class="section">
+            <h2>✨ Efeitos</h2>
+            <div class="effects">
+                <button class="effect-btn active" onclick="sendEffect('solid')"><span class="emoji">⬛</span>Sólido</button>
+                <button class="effect-btn" onclick="sendEffect('fade')"><span class="emoji">💫</span>Fade</button>
+                <button class="effect-btn" onclick="sendEffect('blink')"><span class="emoji">💥</span>Piscada</button>
+                <button class="effect-btn" onclick="sendEffect('rainbow')"><span class="emoji">🌈</span>Rainbow</button>
+                <button class="effect-btn" onclick="sendEffect('pulse')"><span class="emoji">💓</span>Pulso</button>
+                <button class="effect-btn" onclick="sendEffect('chase')"><span class="emoji">🏃</span>Corrida</button>
+                <button class="effect-btn" onclick="sendEffect('wave')"><span class="emoji">🌊</span>Onda</button>
+                <button class="effect-btn" onclick="sendEffect('random')"><span class="emoji">🎲</span>Aleatório</button>
+            </div>
+        </div>
+
+        <!-- VELOCIDADE -->
+        <div class="section">
+            <h2>⚡ Velocidade</h2>
+            <div class="slider-group">
+                <input type="range" id="speed" min="1" max="255" value="50" oninput="sendSpeed(this.value)">
+                <span class="slider-value" id="speedValue">50</span>
+            </div>
+        </div>
+
+        <!-- DESLIGAR -->
+        <div class="section">
+            <button class="btn-off" onclick="turnOff()">🔴 Desligar LEDs</button>
+        </div>
+
+        <div class="info">
+            <p>Conectando a: 192.168.4.1</p>
+        </div>
+    </div>
+
+    <script>
+        const ESP32_IP = '192.168.4.1';
+        const ESP32_URL = `http://${ESP32_IP}`;
+        let currentColor = '#fbbf24';
+
+        // Teste de conexão
+        setInterval(testConnection, 5000);
+        testConnection();
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${ESP32_URL}/status`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                document.getElementById('status').className = 'status connected';
+                document.getElementById('status').textContent = '✓ Conectado';
+            } catch (error) {
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').textContent = '✗ Desconectado';
+            }
+        }
+
+        async function sendColor(hexColor) {
+            if (document.getElementById('status').className.includes('disconnected')) {
+                alert('ESP32 desconectado!');
+                return;
+            }
+
+            currentColor = hexColor;
+            document.getElementById('colorPicker').value = hexColor;
+            const rgb = hexToRgb(hexColor);
+            const brightness = document.getElementById('brightness').value;
+
+            try {
+                await fetch(`${ESP32_URL}/color`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        r: rgb.r,
+                        g: rgb.g,
+                        b: rgb.b,
+                        brightness: brightness
+                    }),
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function sendBrightness(value) {
+            document.getElementById('brightnessValue').textContent = value;
+            try {
+                await fetch(`${ESP32_URL}/brightness`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ brightness: value }),
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function sendSpeed(value) {
+            document.getElementById('speedValue').textContent = value;
+            try {
+                await fetch(`${ESP32_URL}/speed`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ speed: value }),
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function sendEffect(effectName) {
+            document.querySelectorAll('.effect-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.effect-btn').classList.add('active');
+
+            try {
+                await fetch(`${ESP32_URL}/effect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        effect: effectName,
+                        speed: document.getElementById('speed').value,
+                        brightness: document.getElementById('brightness').value
+                    }),
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function turnOff() {
+            try {
+                await fetch(`${ESP32_URL}/off`, {
+                    method: 'POST',
+                    mode: 'no-cors'
+                });
+                document.getElementById('brightness').value = 0;
+                document.getElementById('brightnessValue').textContent = '0';
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        document.getElementById('colorPicker').addEventListener('change', (e) => {
+            sendColor(e.target.value);
+        });
+    </script>
+</body>
+</html>

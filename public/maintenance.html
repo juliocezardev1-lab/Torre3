@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Manutenção — Voltamos em breve</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#0f1724" />
+    <style>
+      /* Visual tokens */
+      :root{
+        --bg: #0f1724;
+        --card: #0b1220;
+        --accent: #F59E0B;
+        --muted: #94a3b8;
+        --glass: rgba(255,255,255,0.03);
+      }
+
+      /* Base */
+      *{box-sizing:border-box}
+      html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+      body{
+        background: radial-gradient(1200px 600px at 10% 10%, rgba(20,30,60,0.22), transparent),
+                    linear-gradient(180deg,var(--bg),#020617);
+        color: #e6eef8;
+        -webkit-font-smoothing:antialiased;
+        -moz-osx-font-smoothing:grayscale;
+        display:flex; align-items:center; justify-content:center; padding:24px;
+      }
+
+      /* Card */
+      .card{
+        width:100%; max-width:920px; display:flex; gap:28px; align-items:center;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.04); border-radius:14px; padding:34px;
+        box-shadow: 0 10px 30px rgba(2,6,23,0.6); backdrop-filter: blur(6px);
+      }
+
+      .left { flex:1; min-width:0 }
+      .logo{ width:88px; height:88px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; }
+      .brand{ background: linear-gradient(135deg,var(--accent),#FB923C); color:#081029; width:88px; height:88px; border-radius:12px; display:flex; align-items:center; justify-content:center }
+
+      h1{ margin:0; font-size:22px; color:var(--accent) }
+      p.lead{ margin:10px 0 18px; color:var(--muted); line-height:1.45 }
+      .meta{ display:flex; gap:12px; align-items:center; flex-wrap:wrap }
+      .chip{ background:var(--glass); padding:8px 12px; border-radius:999px; color:var(--muted); font-size:13px }
+
+      .right{ width:220px; text-align:center }
+      .count{ font-size:36px; font-weight:700; margin-bottom:6px }
+      .btn{ border:none; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600 }
+      .btn.primary{ background:var(--accent); color:#081029 }
+      .btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted) }
+
+      footer{ width:100%; margin-top:18px; font-size:13px; color:var(--muted); display:flex; justify-content:space-between; align-items:center }
+
+      @media (max-width:720px){
+        .card{ flex-direction:column; padding:22px }
+        .right{ width:100%; display:flex; align-items:center; justify-content:space-between }
+        .brand{ width:64px; height:64px; font-size:20px }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="main" aria-labelledby="main-title">
+      <div class="left">
+        <div style="display:flex;gap:14px;align-items:center">
+          <div class="brand" aria-hidden="true">🗼</div>
+          <div style="min-width:0">
+            <h1 id="main-title">Estamos em Manutenção. Voltamos em breve.</h1>
+            <p class="lead">Estamos atualizando o site para melhorar sua experiência. Agradecemos sua paciência.</p>
+            <div class="meta">
+              <div class="chip">Status: Em manutenção</div>
+              <div class="chip">Estimativa: breve</div>
+              <div class="chip" id="reload-info">Tentando recarregar em <strong id="countdown">30</strong>s</div>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <div>Precisa de ajuda? <a href="mailto:suporte@exemplo.com" style="color:var(--accent);text-decoration:none">suporte@exemplo.com</a></div>
+          <div style="font-size:12px;color:var(--muted)">© Torre • Manutenção</div>
+        </footer>
+      </div>
+
+      <div class="right" aria-hidden="false">
+        <div style="margin-bottom:14px">
+          <div class="count" id="secs">30s</div>
+          <div style="color:var(--muted);font-size:13px">A página será recarregada automaticamente.</div>
+        </div>
+
+        <div>
+          <button class="btn primary" id="reload-now" type="button">Recarregar Agora</button>
+          <div style="height:8px"></div>
+          <button class="btn ghost" id="home" type="button">Voltar ao Início</button>
+        </div>
+      </div>
+    </main>
+
+    <noscript>
+      <div style="position:fixed;left:0;right:0;top:0;background:#111;padding:6px;text-align:center;color:#fff;z-index:9999;font-size:14px">
+        ⚠️ JavaScript está desativado. Recarregue a página após ativar JavaScript no navegador.
+      </div>
+    </noscript>
+
+    <script>
+      // Protective initialization to avoid multiple reloads
+      if (window.maintenancePageReloaded) { console.log('Already reloading...'); throw new Error('Cycle break'); }
+      window.maintenancePageReloaded = true;
+
+      (function () {
+        const INTERVAL = 30; // seconds
+        let remaining = INTERVAL;
+
+        const countdownEl = document.getElementById('countdown');
+        const secsEl = document.getElementById('secs');
+        const reloadBtn = document.getElementById('reload-now');
+        const homeBtn = document.getElementById('home');
+
+        if (!countdownEl || !reloadBtn || !homeBtn) {
+          console.error('Maintenance page DOM incomplete');
+          return;
+        }
+
+        function updateDisplay() {
+          countdownEl.textContent = String(remaining);
+          secsEl.textContent = `${remaining}s`;
+        }
+
+        function tick() {
+          remaining -= 1;
+          if (remaining <= 0) {
+            try { location.reload(); } catch (e) { location.href = location.href; }
+            remaining = INTERVAL;
+          }
+          updateDisplay();
+        }
+
+        // Start countdown
+        updateDisplay();
+        const timer = setInterval(tick, 1000);
+
+        // Button handlers
+        reloadBtn.addEventListener('click', () => {
+          try { location.reload(); } catch (e) { location.href = location.href; }
+        });
+        homeBtn.addEventListener('click', () => { location.href = '/'; });
+
+        // Accessibility: focus primary action
+        reloadBtn.focus();
+
+        // Cleanup on page exit
+        window.addEventListener('beforeunload', () => { clearInterval(timer); }, { once: true });
+      })();
+    </script>
+  </body>
+</html>

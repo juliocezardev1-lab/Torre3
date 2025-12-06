@@ -1,0 +1,7 @@
+# Netlify SPA Routing Configuration
+# Redireciona todas as rotas não encontradas para index.html (SPA) com status 200
+# Permite que o React Router ou arquivo index.html handleize as rotas
+/*  /index.html  200
+
+# Para ativar manutenção emergencial, descomente a linha abaixo:
+# /* /maintenance.html  503
