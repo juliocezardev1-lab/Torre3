@@ -214,6 +214,8 @@
         let baseColor = new THREE.Color("#ffaa00"); 
         let colorPicker, flagMesh;
         let lastDiscoChange = 0;
+        let globalYAntenna = 75;
+        let globalYFlag = 75;
 
         // --- 2. SISTEMA DE ÁUDIO ---
         function initAudio() {
@@ -406,7 +408,7 @@
             geometry.translate(2, 0, 0); 
             const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
             flagMesh = new THREE.Mesh(geometry, material);
-            flagMesh.position.set(0, 81, 0); 
+            flagMesh.position.set(0, globalYFlag, 0); 
             scene.add(flagMesh);
         }
 
@@ -416,8 +418,10 @@
             const addLine = (p1, p2) => positions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
             const vec = (x, y, z) => new THREE.Vector3(x, y, z);
 
-            const Y_GND = 0, Y_PLAT1 = 14, Y_PLAT2 = 36, Y_TOP = 68, Y_ANTENNA = 81;
-            const W_BASE = 22, W_PLAT1 = 10.0, W_PLAT2 = 3.8, W_TOP = 0.8;
+            const Y_GND = 0, Y_PLAT1 = 14, Y_PLAT2 = 36, Y_TOP = 68, Y_ANTENNA = 75, Y_FLAG = 75;
+            const W_BASE = 22, W_PLAT1 = 10.0, W_PLAT2 = 3.8, W_TOP = 1.0;
+            globalYAntenna = Y_ANTENNA;
+            globalYFlag = Y_FLAG;
 
             // 1. Pilares da Base
             const createPillar = (angle) => {
@@ -490,10 +494,21 @@
             createDeck(Y_PLAT1, 12.5, 2.5, 0.5); // Plat 1
             createDeck(Y_PLAT2, 4.5, 1.2); // Plat 2
 
+            // Cube at top
+            const cubeH = 2.0;
+            const cubeY = Y_TOP + cubeH;
+            const cubeW = W_TOP + 0.5;
+            const topCorners = [vec(W_TOP, Y_TOP, W_TOP), vec(-W_TOP, Y_TOP, W_TOP), vec(-W_TOP, Y_TOP, -W_TOP), vec(W_TOP, Y_TOP, -W_TOP)];
+            const cubeCorners = [vec(cubeW, cubeY, cubeW), vec(-cubeW, cubeY, cubeW), vec(-cubeW, cubeY, -cubeW), vec(cubeW, cubeY, -cubeW)];
+            for(let k=0; k<4; k++) {
+                addLine(topCorners[k], cubeCorners[k]);
+                addLine(cubeCorners[k], cubeCorners[(k+1)%4]);
+            }
+            for(let k=0; k<4; k++) addLine(cubeCorners[k], cubeCorners[(k+1)%4]);
+
             // 5. Antena & Topo
-            const yAnt = Y_TOP + 4.0;
+            const yAnt = cubeY;
             addLine(vec(0, yAnt, 0), vec(0, Y_ANTENNA, 0));
-            addLine(vec(0, Y_ANTENNA, 0), vec(0, Y_ANTENNA + 6, 0));
 
             const geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
